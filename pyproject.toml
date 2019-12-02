@@ -1,0 +1,35 @@
+[project]
+name = "plant-reliability"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Loren", email = "lorenzo.perez@ing.unlp.edu.ar" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "jinja2>=3.1.6",
+    "matplotlib>=3.11.1",
+    "numpy>=2.5.3",
+    "openpyxl>=3.1.5",
+    "pandas>=3.0.5",
+    "pydantic>=2.13.5",
+    "pyyaml>=6.0.3",
+    "scipy>=1.18.1",
+    "streamlit>=1.63.0",
+    "typer>=0.27.2",
+]
+
+[project.scripts]
+plant-reliability = "plant_reliability.cli.main:app"
+
+[build-system]
+requires = ["uv_build>=0.12.9,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.16.6",
+]
