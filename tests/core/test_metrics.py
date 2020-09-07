@@ -6,6 +6,8 @@ from plant_reliability.core.metrics.definitions import (
     calculate_mtbf,
     calculate_mttr,
     calculate_availability,
+    calculate_oee,
+    MetricResult,
 )
 
 
@@ -16,16 +18,6 @@ def test_metrics_hand_verifiable():
 
     start_period = datetime(2023, 1, 1, 0, 0, 0)
     end_period = start_period + timedelta(hours=104)  # Total 104 hours
-
-    # Let's create 4 failures, each lasting 1 hour, so uptime is 100h.
-    # Uptime 1: 0 to 25 -> 25h
-    # Fail 1: 25 to 26 -> 1h down
-    # Uptime 2: 26 to 51 -> 25h
-    # Fail 2: 51 to 52 -> 1h down
-    # Uptime 3: 52 to 77 -> 25h
-    # Fail 3: 77 to 78 -> 1h down
-    # Uptime 4: 78 to 103 -> 25h
-    # Fail 4: 103 to 104 -> 1h down
 
     events = [
         Event(
@@ -75,3 +67,73 @@ def test_metrics_hand_verifiable():
 
     availability = calculate_availability(timeline)
     assert round(availability.value, 4) == round((100.0 / 104.0) * 100.0, 4)
+
+    # Test OEE
+    oee = calculate_oee(availability, performance=0.9, quality=0.95)
+    assert round(oee.value, 4) == round(availability.value * 0.9 * 0.95, 4)
+
+
+def test_missing_data_integrity():
+    # Section 41: Engineering Integrity
+    # If operating hours are unavailable -> MTBF cannot be calculated
+    # If no failures -> MTBF infinite
+
+    start_period = datetime(2023, 1, 1, 0, 0, 0)
+    end_period = start_period + timedelta(hours=10)
+
+    # No events
+    timeline = reconstruct_timeline("A2", [], start_period, end_period)
+
+    mtbf = calculate_mtbf(timeline, [])
+    # Uptime is 10h, failures 0
+    assert mtbf.value is None
+    assert "theoretically infinite" in mtbf.warning
+
+    # What if uptime is 0?
+    timeline_zero = reconstruct_timeline(
+        "A3",
+        [
+            Event(
+                event_id="e",
+                asset_id="A3",
+                start_time=start_period,
+                end_time=end_period,
+                state=AssetState.FAILED,
+            )
+        ],
+        start_period,
+        end_period,
+    )
+
+    mtbf_zero = calculate_mtbf(timeline_zero, [])
+    assert mtbf_zero.value is None
+    assert "operating time is zero" in mtbf_zero.error
+
+    # MTTR missing end time
+    events_broken = [
+        Event(
+            event_id="e1",
+            asset_id="A3",
+            start_time=start_period,
+            state=AssetState.FAILED,
+        )
+    ]
+    mttr_broken = calculate_mttr(events_broken, "A3")
+    assert mttr_broken.value is None
+    assert "but only 0 contain a valid return-to-service" in mttr_broken.error
+
+
+def test_oee_incomplete():
+    # Section 11: Do not fabricate Performance or Quality
+    avail = MetricResult(
+        name="Availability",
+        value=90.0,
+        units="%",
+        equation="",
+        components={},
+        definition="",
+    )
+
+    oee_inc = calculate_oee(avail, performance=None, quality=None)
+    assert oee_inc.value == 90.0
+    assert "inputs do not exist" in oee_inc.warning

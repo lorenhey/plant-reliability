@@ -26,6 +26,8 @@ from plant_reliability.analysis.weibull.engine import analyze_weibull
 from plant_reliability.analysis.maintenance_policy.engine import (
     evaluate_maintenance_policies,
 )
+from plant_reliability.analysis.recurrence.engine import detect_chronic_failures
+from plant_reliability.core.metrics.definitions import calculate_oee
 
 
 def create_template_excel():
@@ -164,13 +166,15 @@ def run_ui():
 
             st.divider()
 
-            tab1, tab2, tab3, tab4, tab5 = st.tabs(
+            tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(
                 [
                     "Data Quality",
                     "Bad Actors",
                     "Pareto Analysis",
                     "Asset Trends",
                     "Weibull & Policy",
+                    "Chronic Failures",
+                    "Explain Mode & OEE",
                 ]
             )
 
@@ -350,6 +354,80 @@ def run_ui():
                     st.warning(
                         f"No hay suficientes datos de falla para {weibull_asset}. Se requieren al menos 3 intervalos de tiempo de operación hasta la falla."
                     )
+
+            with tab6:
+                st.header("Detección de Fallas Crónicas (Recurrencia)")
+                st.info(
+                    "Identifica modos de falla repetitivos o intervenciones que fallaron en resolver el problema a corto plazo."
+                )
+
+                short_int = st.number_input(
+                    "Intervalo corto (horas) para considerar re-falla:", value=72.0
+                )
+
+                patterns = detect_chronic_failures(
+                    events, short_interval_hours=short_int
+                )
+
+                if patterns:
+                    for p in patterns:
+                        if p.severity == "ERROR":
+                            st.error(
+                                f"**{p.asset_id}** - {p.pattern_type}: {p.description}"
+                            )
+                        else:
+                            st.warning(
+                                f"**{p.asset_id}** - {p.pattern_type}: {p.description}"
+                            )
+                else:
+                    st.success(
+                        "No se detectaron patrones crónicos bajo estos parámetros."
+                    )
+
+            with tab7:
+                st.header("Explain Mode & OEE")
+                st.markdown(
+                    "A reliability metric is useless if the engineer cannot explain exactly how it was calculated."
+                )
+
+                explain_asset = st.selectbox(
+                    "Seleccionar Equipo para auditar", assets, key="e_asset"
+                )
+
+                c_oee1, c_oee2 = st.columns(2)
+                perf_input = c_oee1.number_input(
+                    "Performance % (Opcional)",
+                    min_value=0.0,
+                    max_value=100.0,
+                    value=100.0,
+                )
+                qual_input = c_oee2.number_input(
+                    "Quality % (Opcional)", min_value=0.0, max_value=100.0, value=100.0
+                )
+
+                tl_exp = timelines[explain_asset]
+                avail = calculate_availability(tl_exp)
+                mtbf = calculate_mtbf(tl_exp, events)
+                mttr = calculate_mttr(events, explain_asset)
+                oee = calculate_oee(avail, perf_input / 100.0, qual_input / 100.0)
+
+                st.divider()
+
+                for metric in [avail, mtbf, mttr, oee]:
+                    st.subheader(f"{metric.name} - {explain_asset}")
+                    if metric.error:
+                        st.error(metric.error)
+                    else:
+                        st.metric(metric.name, f"{metric.value:.2f} {metric.units}")
+                        if metric.warning:
+                            st.warning(metric.warning)
+
+                        st.markdown(f"**Definición:** {metric.definition}")
+                        st.markdown(f"**Ecuación:** `{metric.equation}`")
+
+                        st.markdown("**Componentes Intermedios:**")
+                        st.json(metric.components)
+                        st.divider()
 
     else:
         st.info(
