@@ -23,17 +23,20 @@ def calculate_availability(timeline: AssetTimeline) -> MetricResult:
     error = None
     val = None
     if total == 0:
-        error = "Downtime-based availability cannot be calculated because the sum of operating time and downtime is zero."
+        error = "La disponibilidad (Availability) no puede ser calculada porque la suma de tiempo de operación y tiempo de parada es cero."
     else:
         val = uptime / total * 100.0
 
     return MetricResult(
-        name="Availability",
+        name="Disponibilidad (Availability)",
         value=val,
         units="%",
-        equation="Uptime / (Uptime + Downtime)",
-        components={"Uptime (h)": uptime, "Downtime (h)": downtime},
-        definition="The probability that an asset is operating satisfactorily at any point in time under stated conditions.",
+        equation="Tiempo de Operación / (Tiempo de Operación + Tiempo de Parada)",
+        components={
+            "Tiempo de Operación (h)": uptime,
+            "Tiempo de Parada (h)": downtime,
+        },
+        definition="Probabilidad de que un activo se encuentre operando satisfactoriamente en cualquier momento bajo las condiciones declaradas.",
         error=error,
     )
 
@@ -58,19 +61,19 @@ def calculate_mtbf(timeline: AssetTimeline, events: List[Event]) -> MetricResult
     val = None
 
     if uptime == 0.0:
-        error = "MTBF cannot be calculated from operating time because operating time is zero. Calendar-time approximation is disabled by default."
+        error = "El MTBF no puede ser calculado a partir del tiempo de operación porque éste es cero."
     elif num_failures == 0:
-        warning = "No failures detected in the specified period. MTBF is theoretically infinite."
+        warning = "No se detectaron fallas en el período analizado. El MTBF es teóricamente infinito."
     else:
         val = uptime / num_failures
 
     return MetricResult(
         name="MTBF",
         value=val,
-        units="hours",
-        equation="Operating Time / Number of Failures",
-        components={"Operating Time (h)": uptime, "Failures": num_failures},
-        definition="Mean Time Between Failures. Average operating time between repairable failures.",
+        units="horas",
+        equation="Tiempo de Operación / Cantidad de Fallas",
+        components={"Tiempo de Operación (h)": uptime, "Fallas": num_failures},
+        definition="Tiempo Medio Entre Fallas (Mean Time Between Failures). Tiempo promedio de operación entre fallas reparables.",
         error=error,
         warning=warning,
     )
@@ -102,23 +105,23 @@ def calculate_mttr(events: List[Event], asset_id: str) -> MetricResult:
     val = None
 
     if num_repairs > 0 and num_valid < num_repairs:
-        error = f"Cannot calculate MTTR accurately for asset {asset_id}. {num_repairs} failure events were found, but only {num_valid} contain a valid return-to-service timestamp."
+        error = f"No se puede calcular el MTTR con precisión. Se encontraron {num_repairs} eventos de falla, pero solo {num_valid} contienen una fecha válida de fin de reparación."
     elif num_valid == 0:
-        error = f"No repair durations available for asset {asset_id}. Required fields: failure_start, return_to_service."
+        error = f"No hay duraciones de reparación disponibles. Campos requeridos: inicio_falla, fin_reparacion."
     else:
         val = total_repair_time / num_valid
 
     return MetricResult(
         name="MTTR",
         value=val,
-        units="hours",
-        equation="Total Repair Time / Number of Valid Repairs",
+        units="horas",
+        equation="Tiempo Total de Reparación / Cantidad de Reparaciones Válidas",
         components={
-            "Total Repair Time (h)": total_repair_time,
-            "Number of Valid Repairs": num_valid,
-            "Events Excluded (Missing End Time)": num_repairs - num_valid,
+            "Tiempo Total de Reparación (h)": total_repair_time,
+            "Cantidad de Reparaciones Válidas": num_valid,
+            "Eventos Excluidos (Sin fecha fin)": num_repairs - num_valid,
         },
-        definition="Mean Time To Repair. The average time required to repair a failed asset.",
+        definition="Tiempo Medio Para Reparar (Mean Time To Repair). El tiempo promedio requerido para reparar un activo fallado.",
         error=error,
     )
 
@@ -137,28 +140,28 @@ def calculate_oee(
 
     a_val = availability.value / 100.0 if availability.value is not None else None
 
-    components = {"Availability (%)": availability.value}
+    components = {"Disponibilidad (%)": availability.value}
 
     if performance is None or quality is None:
-        warning = "Performance or Quality inputs do not exist. Only the Availability component is calculable."
+        warning = "No se ingresaron los componentes de Rendimiento (Performance) o Calidad (Quality). Solo el componente de Disponibilidad es calculable."
         if a_val is not None:
             val = a_val * 100.0
     else:
-        components["Performance (%)"] = performance * 100.0
-        components["Quality (%)"] = quality * 100.0
+        components["Rendimiento (%)"] = performance * 100.0
+        components["Calidad (%)"] = quality * 100.0
         if a_val is not None:
             val = (a_val * performance * quality) * 100.0
 
     if availability.error:
-        error = "OEE cannot be calculated because Availability is invalid."
+        error = "El OEE no puede ser calculado porque la Disponibilidad es inválida."
 
     return MetricResult(
-        name="OEE",
+        name="OEE (Efectividad General del Equipo)",
         value=val,
         units="%",
-        equation="Availability * Performance * Quality",
+        equation="Disponibilidad * Rendimiento * Calidad",
         components=components,
-        definition="Overall Equipment Effectiveness. A measure of manufacturing productivity.",
+        definition="OEE (Overall Equipment Effectiveness). Es una medida integral de la productividad de manufactura.",
         error=error,
         warning=warning,
     )

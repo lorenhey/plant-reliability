@@ -87,7 +87,7 @@ def test_missing_data_integrity():
     mtbf = calculate_mtbf(timeline, [])
     # Uptime is 10h, failures 0
     assert mtbf.value is None
-    assert "theoretically infinite" in mtbf.warning
+    assert "infinito" in mtbf.warning
 
     # What if uptime is 0?
     timeline_zero = reconstruct_timeline(
@@ -107,7 +107,7 @@ def test_missing_data_integrity():
 
     mtbf_zero = calculate_mtbf(timeline_zero, [])
     assert mtbf_zero.value is None
-    assert "operating time is zero" in mtbf_zero.error
+    assert "tiempo de operación porque éste es cero" in mtbf_zero.error
 
     # MTTR missing end time
     events_broken = [
@@ -120,7 +120,7 @@ def test_missing_data_integrity():
     ]
     mttr_broken = calculate_mttr(events_broken, "A3")
     assert mttr_broken.value is None
-    assert "but only 0 contain a valid return-to-service" in mttr_broken.error
+    assert "pero solo 0 contienen una fecha" in mttr_broken.error
 
 
 def test_oee_incomplete():
@@ -136,4 +136,4 @@ def test_oee_incomplete():
 
     oee_inc = calculate_oee(avail, performance=None, quality=None)
     assert oee_inc.value == 90.0
-    assert "inputs do not exist" in oee_inc.warning
+    assert "Solo el componente de Disponibilidad" in oee_inc.warning
