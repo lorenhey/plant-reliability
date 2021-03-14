@@ -39,24 +39,24 @@ def load_data(filepath: Path, mapping: ImportMapping):
 
 @app.command()
 def validate(filepath: Path):
-    """Validate a dataset and print a Data Quality Report."""
+    """Valida un conjunto de datos y emite un Reporte de Calidad de Datos."""
     mapping = ImportMapping.default()
     events, raw_count = load_data(filepath, mapping)
 
     engine = DataQualityEngine()
     report = engine.evaluate_events(events, raw_count)
 
-    console.print(f"\n[bold]DATA QUALITY REPORT[/bold]")
-    console.print(f"Rows imported: {report.rows_imported}")
-    console.print(f"Valid records: {report.valid_records}")
-    console.print(f"Timestamp completeness: {report.timestamp_completeness:.1f} %")
-    console.print(f"Asset ID completeness: {report.asset_id_completeness:.1f} %")
+    console.print(f"\n[bold]REPORTE DE CALIDAD DE DATOS[/bold]")
+    console.print(f"Filas importadas: {report.rows_imported}")
+    console.print(f"Registros válidos: {report.valid_records}")
+    console.print(f"Completitud de fechas: {report.timestamp_completeness:.1f} %")
+    console.print(f"Completitud de equipos: {report.asset_id_completeness:.1f} %")
     console.print(
-        f"Failure-mode completeness: {report.failure_mode_completeness:.1f} %"
+        f"Completitud de modos de falla: {report.failure_mode_completeness:.1f} %"
     )
 
     if report.issues:
-        console.print("\n[bold]Issues:[/bold]")
+        console.print("\n[bold]Problemas Detectados:[/bold]")
         for issue in report.issues:
             color = "red" if issue.severity.value in ["ERROR", "BLOCKING"] else "yellow"
             console.print(
@@ -65,18 +65,20 @@ def validate(filepath: Path):
             if issue.remediation:
                 console.print(f"  - {issue.remediation}")
     else:
-        console.print("\n[green]No data quality issues detected.[/green]")
+        console.print(
+            "\n[green]No se detectaron problemas de calidad de datos.[/green]"
+        )
 
 
 @app.command()
 def explain(metric: str, asset: str, filepath: Path):
-    """Explain exactly how a metric is calculated for an asset."""
+    """Explica exactamente cómo se calcula una métrica para un equipo."""
     metric = metric.upper()
     mapping = ImportMapping.default()
     events, _ = load_data(filepath, mapping)
 
     if not events:
-        console.print("[red]No valid events found in dataset.[/red]")
+        console.print("[red]No se encontraron eventos válidos en el archivo.[/red]")
         return
 
     start_time = min(e.start_time for e in events if e.start_time)
@@ -91,29 +93,38 @@ def explain(metric: str, asset: str, filepath: Path):
     elif metric == "AVAILABILITY":
         res = calculate_availability(timeline)
     else:
-        console.print(f"[red]Unknown metric: {metric}[/red]")
+        console.print(f"[red]Métrica desconocida: {metric}[/red]")
         return
 
     console.print(f"\n[bold]{res.name} - {asset}[/bold]\n")
-    console.print(f"[bold]Definition:[/bold]\n{res.definition}\n")
-    console.print(f"[bold]Equation:[/bold]\n{res.equation}\n")
+    if res.error:
+        console.print(f"[bold red]ERROR:[/bold red] {res.error}")
+        return
 
-    console.print("[bold]Components:[/bold]")
+    console.print(f"[bold]Definición:[/bold]\n{res.definition}\n")
+    console.print(f"[bold]Ecuación:[/bold]\n{res.equation}\n")
+
+    console.print("[bold]Componentes:[/bold]")
     for k, v in res.components.items():
         console.print(f"  {k}: {v:.2f}" if isinstance(v, float) else f"  {k}: {v}")
 
-    console.print(f"\n[bold green]Result: {res.value:.2f} {res.units}[/bold green]\n")
+    if res.warning:
+        console.print(f"\n[bold yellow]ADVERTENCIA:[/bold yellow] {res.warning}")
+
+    console.print(
+        f"\n[bold green]Resultado: {res.value:.2f} {res.units}[/bold green]\n"
+    )
 
 
 @app.command()
 def analyze(filepath: Path):
-    """Run a comprehensive reliability analysis."""
-    console.print(f"Analyzing {filepath}...")
+    """Ejecuta un análisis de confiabilidad completo (Bad Actors)."""
+    console.print(f"Analizando {filepath}...")
     mapping = ImportMapping.default()
     events, _ = load_data(filepath, mapping)
 
     if not events:
-        console.print("[red]No valid events to analyze.[/red]")
+        console.print("[red]No hay eventos válidos para analizar.[/red]")
         return
 
     start_time = min(e.start_time for e in events if e.start_time)
@@ -128,10 +139,10 @@ def analyze(filepath: Path):
     bad_actors = identify_bad_actors(events, timelines, BadActorConfig())
 
     table = Table(title="Top 10 Bad Actors")
-    table.add_column("Asset")
+    table.add_column("Equipo")
     table.add_column("Score", justify="right")
-    table.add_column("Failures", justify="right")
-    table.add_column("Downtime (h)", justify="right")
+    table.add_column("Fallas", justify="right")
+    table.add_column("Horas Parado", justify="right")
 
     for actor in bad_actors[:10]:
         table.add_row(
@@ -146,15 +157,15 @@ def analyze(filepath: Path):
 
 @app.command()
 def report(filepath: Path, output: Path = Path("reliability_report.html")):
-    """Generate a comprehensive HTML reliability report."""
+    """Genera un reporte de confiabilidad completo en formato HTML."""
     from plant_reliability.reporting.html_generator import generate_html_report
 
-    console.print(f"Reading dataset: {filepath}...")
+    console.print(f"Leyendo archivo: {filepath}...")
     mapping = ImportMapping.default()
     events, raw_count = load_data(filepath, mapping)
 
     if not events:
-        console.print("[red]No valid events to analyze.[/red]")
+        console.print("[red]No hay eventos válidos para analizar.[/red]")
         return
 
     engine = DataQualityEngine()
@@ -171,18 +182,20 @@ def report(filepath: Path, output: Path = Path("reliability_report.html")):
 
     generate_html_report(dq_report, bad_actors, timelines, events, str(output))
     console.print(
-        f"[bold green]Report successfully generated at: {output}[/bold green]"
+        f"[bold green]Reporte generado exitosamente en: {output}[/bold green]"
     )
 
 
 @app.command()
 def demo():
-    """Generate and analyze a synthetic demo dataset."""
+    """Genera y analiza un dataset sintético de demostración."""
     from plant_reliability.examples.demo_generator import generate_demo_dataset
 
-    console.print("[bold green]Generating synthetic demo dataset...[/bold green]")
+    console.print(
+        "[bold green]Generando dataset sintético de demostración...[/bold green]"
+    )
     filepath = generate_demo_dataset()
-    console.print(f"Created demo dataset at {filepath}\n")
+    console.print(f"Dataset creado en {filepath}\n")
 
     validate(filepath)
     console.print("\n")
@@ -191,13 +204,13 @@ def demo():
 
 @app.command()
 def serve():
-    """Launch the local web interface (Streamlit)."""
+    """Inicia la interfaz web local (Streamlit)."""
     import subprocess
     import sys
     from pathlib import Path
 
     app_path = Path(__file__).parent.parent / "ui" / "app.py"
-    console.print("[bold green]Starting local web interface...[/bold green]")
+    console.print("[bold green]Iniciando interfaz web local...[/bold green]")
     subprocess.run([sys.executable, "-m", "streamlit", "run", str(app_path)])
 
 
