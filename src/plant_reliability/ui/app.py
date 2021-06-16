@@ -1,33 +1,34 @@
-import streamlit as st
+import io
+from datetime import datetime
+from pathlib import Path
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from pathlib import Path
-from datetime import datetime
-import io
+import streamlit as st
 
-from plant_reliability.importers.mapping import ImportMapping
-from plant_reliability.importers.csv_importer import CsvImporter
-from plant_reliability.importers.excel_importer import ExcelImporter
-from plant_reliability.core.validation.data_quality import DataQualityEngine
-from plant_reliability.core.timeline.reconstruction import reconstruct_timeline
 from plant_reliability.analysis.bad_actors.engine import (
-    identify_bad_actors,
     BadActorConfig,
+    identify_bad_actors,
 )
-from plant_reliability.core.metrics.definitions import (
-    calculate_mtbf,
-    calculate_mttr,
-    calculate_availability,
-)
-from plant_reliability.analysis.pareto.engine import analyze_pareto
-from plant_reliability.analysis.trends.engine import analyze_trends
-from plant_reliability.analysis.weibull.engine import analyze_weibull
 from plant_reliability.analysis.maintenance_policy.engine import (
     evaluate_maintenance_policies,
 )
+from plant_reliability.analysis.pareto.engine import analyze_pareto
 from plant_reliability.analysis.recurrence.engine import detect_chronic_failures
-from plant_reliability.core.metrics.definitions import calculate_oee
+from plant_reliability.analysis.trends.engine import analyze_trends
+from plant_reliability.analysis.weibull.engine import analyze_weibull
+from plant_reliability.core.metrics.definitions import (
+    calculate_availability,
+    calculate_mtbf,
+    calculate_mttr,
+    calculate_oee,
+)
+from plant_reliability.core.timeline.reconstruction import reconstruct_timeline
+from plant_reliability.core.validation.data_quality import DataQualityEngine
+from plant_reliability.importers.csv_importer import CsvImporter
+from plant_reliability.importers.excel_importer import ExcelImporter
+from plant_reliability.importers.mapping import ImportMapping
 
 
 def create_template_excel():
@@ -185,7 +186,7 @@ def run_ui():
                 (e.end_time or e.start_time for e in events if e.start_time),
                 default=datetime.now(),
             )
-            assets = list(set(e.asset_id for e in events if e.asset_id))
+            assets = list({e.asset_id for e in events if e.asset_id})
             timelines = {
                 a: reconstruct_timeline(a, events, start_time, end_time) for a in assets
             }
@@ -254,18 +255,18 @@ def run_ui():
                             name="% Acumulado",
                             mode="lines+markers",
                             yaxis="y2",
-                            line=dict(color="red"),
+                            line={"color": "red"},
                         )
                     )
                     fig.update_layout(
                         title=f"Pareto: {metric} por {dimension}",
-                        yaxis=dict(title="Valor", side="left"),
-                        yaxis2=dict(
-                            title="% Acumulado",
-                            side="right",
-                            overlaying="y",
-                            range=[0, 105],
-                        ),
+                        yaxis={"title": "Valor", "side": "left"},
+                        yaxis2={
+                            "title": "% Acumulado",
+                            "side": "right",
+                            "overlaying": "y",
+                            "range": [0, 105],
+                        },
                         hovermode="x unified",
                     )
                     st.plotly_chart(fig, use_container_width=True)

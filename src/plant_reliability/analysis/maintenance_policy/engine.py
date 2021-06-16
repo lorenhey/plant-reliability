@@ -1,7 +1,9 @@
-import numpy as np
 import math
-from typing import List, Dict, Any
+from typing import Any
+
+import numpy as np
 from pydantic import BaseModel
+
 from plant_reliability.analysis.weibull.engine import WeibullResult
 
 
@@ -9,7 +11,7 @@ class PolicyComparisonResult(BaseModel):
     policy_name: str
     expected_cost_per_unit_time: float
     optimal_pm_interval: float = 0.0
-    details: Dict[str, Any]
+    details: dict[str, Any]
 
 
 def evaluate_maintenance_policies(
@@ -17,7 +19,7 @@ def evaluate_maintenance_policies(
     cost_pm: float,
     cost_cm: float,
     max_time: float = 10000.0,
-) -> List[PolicyComparisonResult]:
+) -> list[PolicyComparisonResult]:
     """
     Evaluates Run-to-Failure vs Preventive Maintenance based on Weibull parameters.
     """

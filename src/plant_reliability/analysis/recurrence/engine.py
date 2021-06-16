@@ -1,19 +1,19 @@
-from typing import List, Dict
 from pydantic import BaseModel
-from plant_reliability.core.domain.models import Event, AssetState
+
+from plant_reliability.core.domain.models import AssetState, Event
 
 
 class RecurrencePattern(BaseModel):
     asset_id: str
     pattern_type: str
     description: str
-    evidence_events: List[str]
+    evidence_events: list[str]
     severity: str
 
 
 def detect_chronic_failures(
-    events: List[Event], short_interval_hours: float = 72.0
-) -> List[RecurrencePattern]:
+    events: list[Event], short_interval_hours: float = 72.0
+) -> list[RecurrencePattern]:
     """
     Detects patterns like:
     - Recurring failure modes.

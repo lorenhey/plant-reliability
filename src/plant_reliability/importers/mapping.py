@@ -1,20 +1,20 @@
+
 from pydantic import BaseModel
-from typing import Dict, Optional
 
 
 class ImportMapping(BaseModel):
-    event_id: Optional[str] = None
+    event_id: str | None = None
     asset_id: str
     start_time: str
-    end_time: Optional[str] = None
-    state: Optional[str] = None
-    maintenance_type: Optional[str] = None
-    failure_mode: Optional[str] = None
-    cost: Optional[str] = None
-    work_order: Optional[str] = None
+    end_time: str | None = None
+    state: str | None = None
+    maintenance_type: str | None = None
+    failure_mode: str | None = None
+    cost: str | None = None
+    work_order: str | None = None
 
     # Custom formats for timestamps
-    timestamp_format: Optional[str] = None
+    timestamp_format: str | None = None
 
     @classmethod
     def default(cls) -> "ImportMapping":

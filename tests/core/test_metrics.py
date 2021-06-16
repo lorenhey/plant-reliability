@@ -1,14 +1,14 @@
 from datetime import datetime, timedelta
-import pytest
-from plant_reliability.core.domain.models import Event, AssetState, MaintenanceType
-from plant_reliability.core.timeline.reconstruction import reconstruct_timeline
+
+from plant_reliability.core.domain.models import AssetState, Event, MaintenanceType
 from plant_reliability.core.metrics.definitions import (
+    MetricResult,
+    calculate_availability,
     calculate_mtbf,
     calculate_mttr,
-    calculate_availability,
     calculate_oee,
-    MetricResult,
 )
+from plant_reliability.core.timeline.reconstruction import reconstruct_timeline
 
 
 def test_metrics_hand_verifiable():

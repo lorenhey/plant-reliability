@@ -1,14 +1,15 @@
-from jinja2 import Environment, BaseLoader
 from datetime import datetime
-from plant_reliability.core.validation.data_quality import DataQualityReport
+
+from jinja2 import BaseLoader, Environment
+
 from plant_reliability.analysis.bad_actors.engine import BadActorScore
 from plant_reliability.core.metrics.definitions import (
+    calculate_availability,
     calculate_mtbf,
     calculate_mttr,
-    calculate_availability,
 )
 from plant_reliability.core.timeline.reconstruction import AssetTimeline
-from typing import List, Dict
+from plant_reliability.core.validation.data_quality import DataQualityReport
 
 # Very simple template directly in code for offline-first zero-config packaging
 HTML_TEMPLATE = """
@@ -89,9 +90,9 @@ HTML_TEMPLATE = """
 
 def generate_html_report(
     dq_report: DataQualityReport,
-    bad_actors: List[BadActorScore],
-    timelines: Dict[str, AssetTimeline],
-    events: List,
+    bad_actors: list[BadActorScore],
+    timelines: dict[str, AssetTimeline],
+    events: list,
     output_path: str,
 ):
     env = Environment(loader=BaseLoader())

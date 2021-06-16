@@ -1,7 +1,7 @@
-import pytest
-from datetime import datetime, timedelta
-from plant_reliability.core.domain.models import Event, AssetState, MaintenanceType
+from datetime import datetime
+
 from plant_reliability.analysis.trends.engine import analyze_trends
+from plant_reliability.core.domain.models import AssetState, Event, MaintenanceType
 
 
 def test_trend_analysis():

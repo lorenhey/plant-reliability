@@ -1,18 +1,20 @@
-from typing import List, Optional, Any
+from typing import Any
+
 from pydantic import BaseModel
+
+from plant_reliability.core.domain.models import AssetState, Event, MaintenanceType
 from plant_reliability.core.timeline.reconstruction import AssetTimeline
-from plant_reliability.core.domain.models import AssetState, MaintenanceType, Event
 
 
 class MetricResult(BaseModel):
     name: str
-    value: Optional[float]
+    value: float | None
     units: str
     equation: str
     components: dict[str, Any]
     definition: str
-    error: Optional[str] = None
-    warning: Optional[str] = None
+    error: str | None = None
+    warning: str | None = None
 
 
 def calculate_availability(timeline: AssetTimeline) -> MetricResult:
@@ -41,7 +43,7 @@ def calculate_availability(timeline: AssetTimeline) -> MetricResult:
     )
 
 
-def calculate_mtbf(timeline: AssetTimeline, events: List[Event]) -> MetricResult:
+def calculate_mtbf(timeline: AssetTimeline, events: list[Event]) -> MetricResult:
     uptime = timeline.get_uptime_hours()
 
     # Failures are events with state FAILED or maintenance_type CORRECTIVE
@@ -79,7 +81,7 @@ def calculate_mtbf(timeline: AssetTimeline, events: List[Event]) -> MetricResult
     )
 
 
-def calculate_mttr(events: List[Event], asset_id: str) -> MetricResult:
+def calculate_mttr(events: list[Event], asset_id: str) -> MetricResult:
     # MTTR is based on repair times (duration of corrective events)
     repairs = [
         e
@@ -107,7 +109,7 @@ def calculate_mttr(events: List[Event], asset_id: str) -> MetricResult:
     if num_repairs > 0 and num_valid < num_repairs:
         error = f"No se puede calcular el MTTR con precisión. Se encontraron {num_repairs} eventos de falla, pero solo {num_valid} contienen una fecha válida de fin de reparación."
     elif num_valid == 0:
-        error = f"No hay duraciones de reparación disponibles. Campos requeridos: inicio_falla, fin_reparacion."
+        error = "No hay duraciones de reparación disponibles. Campos requeridos: inicio_falla, fin_reparacion."
     else:
         val = total_repair_time / num_valid
 
@@ -128,8 +130,8 @@ def calculate_mttr(events: List[Event], asset_id: str) -> MetricResult:
 
 def calculate_oee(
     availability: MetricResult,
-    performance: Optional[float] = None,
-    quality: Optional[float] = None,
+    performance: float | None = None,
+    quality: float | None = None,
 ) -> MetricResult:
     """
     OEE = Availability * Performance * Quality

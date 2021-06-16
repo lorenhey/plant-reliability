@@ -1,7 +1,7 @@
-import pytest
 from datetime import datetime
-from plant_reliability.core.domain.models import Event
+
 from plant_reliability.analysis.pareto.engine import analyze_pareto
+from plant_reliability.core.domain.models import Event
 
 
 def test_pareto_analysis():

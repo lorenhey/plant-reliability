@@ -1,6 +1,7 @@
+
 import pandas as pd
-from typing import List, Dict, Any, Tuple
 from pydantic import BaseModel
+
 from plant_reliability.core.domain.models import Event
 
 
@@ -13,10 +14,10 @@ class ParetoItem(BaseModel):
 class ParetoResult(BaseModel):
     dimension: str
     metric: str
-    items: List[ParetoItem]
+    items: list[ParetoItem]
 
 
-def analyze_pareto(events: List[Event], dimension: str, metric: str) -> ParetoResult:
+def analyze_pareto(events: list[Event], dimension: str, metric: str) -> ParetoResult:
     """
     Perform a Pareto analysis on events.
 

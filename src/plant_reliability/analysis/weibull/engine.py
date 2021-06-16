@@ -1,7 +1,6 @@
-import numpy as np
-from scipy.stats import weibull_min
-from typing import List, Dict, Any, Optional
+
 from pydantic import BaseModel
+from scipy.stats import weibull_min
 
 
 class WeibullResult(BaseModel):
@@ -9,7 +8,7 @@ class WeibullResult(BaseModel):
     eta_scale: float
     sample_size: int
     interpretation: str
-    warnings: List[str]
+    warnings: list[str]
 
 
 def interpret_beta(beta: float) -> str:
@@ -21,7 +20,7 @@ def interpret_beta(beta: float) -> str:
         return "Beta > 1: Increasing hazard rate. Compatible with wear-out or fatigue behaviour."
 
 
-def analyze_weibull(ttf_values: List[float]) -> Optional[WeibullResult]:
+def analyze_weibull(ttf_values: list[float]) -> WeibullResult | None:
     warnings = []
 
     # Filter out zeros or negative times to failure
@@ -38,7 +37,7 @@ def analyze_weibull(ttf_values: List[float]) -> Optional[WeibullResult]:
     # Fit the 2-parameter Weibull distribution using scipy
     # scipy's weibull_min fits shape (c = beta), loc, and scale (eta)
     # We force loc=0 for a standard 2-parameter Weibull
-    shape, loc, scale = weibull_min.fit(valid_ttf, floc=0)
+    shape, _loc, scale = weibull_min.fit(valid_ttf, floc=0)
 
     beta = float(shape)
     eta = float(scale)

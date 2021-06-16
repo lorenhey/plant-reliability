@@ -1,6 +1,7 @@
-from typing import List, Dict, Any
 from enum import Enum
+
 from pydantic import BaseModel
+
 from plant_reliability.core.domain.models import Event
 
 
@@ -24,7 +25,7 @@ class DataQualityReport(BaseModel):
     timestamp_completeness: float
     asset_id_completeness: float
     failure_mode_completeness: float
-    issues: List[QualityIssue]
+    issues: list[QualityIssue]
 
 
 class DataQualityEngine:
@@ -32,7 +33,7 @@ class DataQualityEngine:
         self.raw_df = raw_df
 
     def evaluate_events(
-        self, events: List[Event], raw_rows_count: int = 0
+        self, events: list[Event], raw_rows_count: int = 0
     ) -> DataQualityReport:
         rows_imported = raw_rows_count if raw_rows_count > 0 else len(events)
 

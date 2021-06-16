@@ -1,8 +1,7 @@
-import pytest
-from plant_reliability.analysis.weibull.engine import WeibullResult
 from plant_reliability.analysis.maintenance_policy.engine import (
     evaluate_maintenance_policies,
 )
+from plant_reliability.analysis.weibull.engine import WeibullResult
 
 
 def test_policy_random_failure():

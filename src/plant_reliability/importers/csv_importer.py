@@ -1,8 +1,9 @@
-import pandas as pd
 import uuid
-from typing import List, Tuple
 from datetime import datetime
-from plant_reliability.core.domain.models import Event, AssetState, MaintenanceType
+
+import pandas as pd
+
+from plant_reliability.core.domain.models import AssetState, Event, MaintenanceType
 from plant_reliability.importers.mapping import ImportMapping
 
 
@@ -20,11 +21,11 @@ class CsvImporter:
         except Exception:
             return None
 
-    def read_file(self, filepath: str) -> Tuple[List[Event], int]:
+    def read_file(self, filepath: str) -> tuple[list[Event], int]:
         df = pd.read_csv(filepath)
         return self._process_dataframe(df)
 
-    def _process_dataframe(self, df: pd.DataFrame) -> Tuple[List[Event], int]:
+    def _process_dataframe(self, df: pd.DataFrame) -> tuple[list[Event], int]:
         events = []
         raw_count = len(df)
 
@@ -36,9 +37,7 @@ class CsvImporter:
             )
 
             start_time = self.parse_time(
-                row[self.mapping.start_time]
-                if self.mapping.start_time in row
-                else None,
+                row.get(self.mapping.start_time, None),
                 self.mapping.timestamp_format,
             )
             if not start_time:

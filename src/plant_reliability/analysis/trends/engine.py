@@ -1,10 +1,11 @@
-import pandas as pd
-from typing import List, Dict
 from datetime import datetime
+
+import pandas as pd
 from pydantic import BaseModel
-from plant_reliability.core.domain.models import Event, AssetState, MaintenanceType
-from plant_reliability.core.timeline.reconstruction import reconstruct_timeline
+
+from plant_reliability.core.domain.models import AssetState, Event, MaintenanceType
 from plant_reliability.core.metrics.definitions import calculate_mtbf
+from plant_reliability.core.timeline.reconstruction import reconstruct_timeline
 
 
 class TrendPoint(BaseModel):
@@ -18,11 +19,11 @@ class TrendPoint(BaseModel):
 
 def analyze_trends(
     asset_id: str,
-    events: List[Event],
+    events: list[Event],
     start_date: datetime,
     end_date: datetime,
     period: str = "M",
-) -> List[TrendPoint]:
+) -> list[TrendPoint]:
     """
     Calculates monthly (or specified frequency) trends for a given asset.
     """

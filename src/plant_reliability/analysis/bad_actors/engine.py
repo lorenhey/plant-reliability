@@ -1,6 +1,5 @@
-import pandas as pd
-from typing import List, Dict, Any
 from pydantic import BaseModel
+
 from plant_reliability.core.domain.models import Event
 from plant_reliability.core.timeline.reconstruction import AssetTimeline
 
@@ -22,8 +21,8 @@ class BadActorConfig(BaseModel):
 
 
 def identify_bad_actors(
-    events: List[Event], timelines: Dict[str, AssetTimeline], config: BadActorConfig
-) -> List[BadActorScore]:
+    events: list[Event], timelines: dict[str, AssetTimeline], config: BadActorConfig
+) -> list[BadActorScore]:
     asset_stats = {}
 
     for asset_id, timeline in timelines.items():
@@ -45,7 +44,7 @@ def identify_bad_actors(
         cost = sum(e.cost for e in asset_events)
 
         # Chronicity (simple ratio of failures / unique failure modes, indicating recurring same failures)
-        modes = set(f.failure_mode for f in failures if f.failure_mode)
+        modes = {f.failure_mode for f in failures if f.failure_mode}
         chronicity = freq / len(modes) if len(modes) > 0 else 1.0 if freq > 0 else 0.0
 
         asset_stats[asset_id] = {

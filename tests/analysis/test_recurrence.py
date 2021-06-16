@@ -1,7 +1,7 @@
-import pytest
 from datetime import datetime
-from plant_reliability.core.domain.models import Event, AssetState, MaintenanceType
+
 from plant_reliability.analysis.recurrence.engine import detect_chronic_failures
+from plant_reliability.core.domain.models import AssetState, Event
 
 
 def test_short_interval_recurrence():

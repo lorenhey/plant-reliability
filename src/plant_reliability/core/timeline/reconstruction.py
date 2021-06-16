@@ -1,14 +1,15 @@
-from typing import List, Optional
 from datetime import datetime
+
 from pydantic import BaseModel
-from plant_reliability.core.domain.models import Event, AssetState
+
+from plant_reliability.core.domain.models import AssetState, Event
 
 
 class TimelineInterval(BaseModel):
     start_time: datetime
     end_time: datetime
     state: AssetState
-    associated_event_id: Optional[str] = None
+    associated_event_id: str | None = None
 
     @property
     def duration_hours(self) -> float:
@@ -16,7 +17,7 @@ class TimelineInterval(BaseModel):
 
 
 class AssetTimeline:
-    def __init__(self, asset_id: str, intervals: List[TimelineInterval]):
+    def __init__(self, asset_id: str, intervals: list[TimelineInterval]):
         self.asset_id = asset_id
         self.intervals = sorted(intervals, key=lambda x: x.start_time)
 
@@ -35,7 +36,7 @@ class AssetTimeline:
 
 
 def reconstruct_timeline(
-    asset_id: str, events: List[Event], period_start: datetime, period_end: datetime
+    asset_id: str, events: list[Event], period_start: datetime, period_end: datetime
 ) -> AssetTimeline:
     """
     Reconstructs the timeline of an asset based on its events.

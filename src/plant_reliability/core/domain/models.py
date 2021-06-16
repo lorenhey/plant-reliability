@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional, Dict, Any
 from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, Field
 
 
 class AssetState(str, Enum):
@@ -24,13 +25,13 @@ class Event(BaseModel):
     event_id: str
     asset_id: str
     start_time: datetime
-    end_time: Optional[datetime] = None
+    end_time: datetime | None = None
     state: AssetState = AssetState.UNKNOWN
-    maintenance_type: Optional[MaintenanceType] = None
-    failure_mode: Optional[str] = None
+    maintenance_type: MaintenanceType | None = None
+    failure_mode: str | None = None
     cost: float = 0.0
-    work_order: Optional[str] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    work_order: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
     @property
     def duration_hours(self) -> float:
@@ -41,5 +42,5 @@ class Event(BaseModel):
 
 class Asset(BaseModel):
     asset_id: str
-    description: Optional[str] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    description: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)

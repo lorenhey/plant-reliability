@@ -1,24 +1,23 @@
-import typer
-import pandas as pd
 from pathlib import Path
-from datetime import datetime
+
+import typer
 from rich.console import Console
 from rich.table import Table
-from plant_reliability.importers.mapping import ImportMapping
-from plant_reliability.importers.csv_importer import CsvImporter
-from plant_reliability.importers.excel_importer import ExcelImporter
-from plant_reliability.core.validation.data_quality import DataQualityEngine
-from plant_reliability.core.timeline.reconstruction import reconstruct_timeline
+
+from plant_reliability.analysis.bad_actors.engine import (
+    BadActorConfig,
+    identify_bad_actors,
+)
 from plant_reliability.core.metrics.definitions import (
+    calculate_availability,
     calculate_mtbf,
     calculate_mttr,
-    calculate_availability,
 )
-from plant_reliability.analysis.weibull.engine import analyze_weibull
-from plant_reliability.analysis.bad_actors.engine import (
-    identify_bad_actors,
-    BadActorConfig,
-)
+from plant_reliability.core.timeline.reconstruction import reconstruct_timeline
+from plant_reliability.core.validation.data_quality import DataQualityEngine
+from plant_reliability.importers.csv_importer import CsvImporter
+from plant_reliability.importers.excel_importer import ExcelImporter
+from plant_reliability.importers.mapping import ImportMapping
 
 app = typer.Typer(
     help="plant-reliability: Turn messy maintenance records into auditable reliability engineering."
@@ -46,7 +45,7 @@ def validate(filepath: Path):
     engine = DataQualityEngine()
     report = engine.evaluate_events(events, raw_count)
 
-    console.print(f"\n[bold]REPORTE DE CALIDAD DE DATOS[/bold]")
+    console.print("\n[bold]REPORTE DE CALIDAD DE DATOS[/bold]")
     console.print(f"Filas importadas: {report.rows_imported}")
     console.print(f"Registros válidos: {report.valid_records}")
     console.print(f"Completitud de fechas: {report.timestamp_completeness:.1f} %")
@@ -131,7 +130,7 @@ def analyze(filepath: Path):
     end_time = max(e.end_time or e.start_time for e in events if e.start_time)
 
     # Get unique assets
-    assets = list(set(e.asset_id for e in events if e.asset_id))
+    assets = list({e.asset_id for e in events if e.asset_id})
     timelines = {
         a: reconstruct_timeline(a, events, start_time, end_time) for a in assets
     }
@@ -174,7 +173,7 @@ def report(filepath: Path, output: Path = Path("reliability_report.html")):
     start_time = min(e.start_time for e in events if e.start_time)
     end_time = max(e.end_time or e.start_time for e in events if e.start_time)
 
-    assets = list(set(e.asset_id for e in events if e.asset_id))
+    assets = list({e.asset_id for e in events if e.asset_id})
     timelines = {
         a: reconstruct_timeline(a, events, start_time, end_time) for a in assets
     }
