@@ -1,4 +1,3 @@
-
 import pandas as pd
 
 from plant_reliability.core.domain.models import Event

@@ -1,4 +1,3 @@
-
 from pydantic import BaseModel
 from scipy.stats import weibull_min
 
